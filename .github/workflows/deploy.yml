@@ -1,0 +1,89 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["Docker Image"]
+    types: [completed]
+    branches: [develop, main, master]
+
+permissions:
+  contents: read
+  packages: read
+  deployments: write
+
+jobs:
+  deploy-staging:
+    name: Deploy staging
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop' }}
+    environment:
+      name: staging
+      url: http://localhost:8001/health
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set image name
+        id: image
+        run: echo "image_name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy staging image
+        run: |
+          chmod +x scripts/deploy.sh
+          scripts/deploy.sh staging "${{ steps.image.outputs.image_name }}:${{ github.event.workflow_run.head_sha }}" 8001
+
+      - name: Send deployment notification
+        if: always()
+        run: |
+          echo "## Staging deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Status: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: ${{ steps.image.outputs.image_name }}:${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Health check: http://localhost:8001/health" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-production:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'master') }}
+    environment:
+      name: production
+      url: http://localhost:8000/health
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set image name
+        id: image
+        run: echo "image_name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy production image
+        run: |
+          chmod +x scripts/deploy.sh
+          scripts/deploy.sh production "${{ steps.image.outputs.image_name }}:${{ github.event.workflow_run.head_sha }}" 8000
+
+      - name: Send deployment notification
+        if: always()
+        run: |
+          echo "## Production deployment" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Status: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Image: ${{ steps.image.outputs.image_name }}:${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Health check: http://localhost:8000/health" >> "$GITHUB_STEP_SUMMARY"

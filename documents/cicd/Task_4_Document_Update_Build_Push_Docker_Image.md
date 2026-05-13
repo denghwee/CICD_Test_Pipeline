@@ -8,13 +8,13 @@ The workflow is defined in:
 .github/workflows/docker-image.yml
 ```
 
-It runs on every push to the `main` branch, but only when source or Docker build
-files change.
+It runs on every push to the `main`, `master`, or `develop` branch, but only
+when source or Docker build files change.
 
 ```yaml
 on:
   push:
-    branches: [main]
+    branches: [master, main, develop]
     paths:
       - "src/**"
       - "Dockerfile"
@@ -38,10 +38,13 @@ ghcr.io/<owner>/<repository>
 The workflow converts the repository path to lowercase before tagging because
 container image names must be lowercase.
 
-Each successful build creates two tags:
+Each successful build creates a commit SHA tag:
 
 - `${{ github.sha }}`: immutable tag for the exact commit.
-- `latest`: moving tag for the newest image from `main`.
+
+Production branch builds also push:
+
+- `latest`: moving tag for the newest image from `main` or `master`.
 
 Example:
 

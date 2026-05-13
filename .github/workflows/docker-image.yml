@@ -2,7 +2,7 @@ name: Docker Image
 
 on:
   push:
-    branches: [master, main]
+    branches: [master, main, develop]
     paths:
       - "src/**"
       - "Dockerfile"
@@ -62,4 +62,5 @@ jobs:
         run: docker push ${{ steps.image.outputs.image_name }}:${{ github.sha }}
 
       - name: Push latest tag
+        if: ${{ github.ref_name == 'main' || github.ref_name == 'master' }}
         run: docker push ${{ steps.image.outputs.image_name }}:latest
