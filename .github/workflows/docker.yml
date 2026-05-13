@@ -9,7 +9,7 @@ on:
       - ".dockerignore"
       - "requirements*.txt"
       - "pyproject.toml"
-      - ".github/workflows/docker-image.yml"
+      - ".github/workflows/docker.yml"
 
 permissions:
   contents: read

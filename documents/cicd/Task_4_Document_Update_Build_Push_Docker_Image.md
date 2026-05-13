@@ -5,7 +5,7 @@
 The workflow is defined in:
 
 ```text
-.github/workflows/docker-image.yml
+.github/workflows/docker.yml
 ```
 
 It runs on every push to the `main`, `master`, or `develop` branch, but only
@@ -21,7 +21,7 @@ on:
       - ".dockerignore"
       - "requirements*.txt"
       - "pyproject.toml"
-      - ".github/workflows/docker-image.yml"
+      - ".github/workflows/docker.yml"
 ```
 
 Documentation-only changes are skipped because files under `documents/**` are
