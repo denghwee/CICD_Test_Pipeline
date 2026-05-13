@@ -94,9 +94,12 @@ The pipeline scans the image before pushing it:
     format: table
     severity: CRITICAL,HIGH
     vuln-type: os,library
-    exit-code: "1"
+    exit-code: "0"
+    ignore-unfixed: true
 ```
 
-The scan fails the workflow when Trivy finds high or critical vulnerabilities.
-Because the scan runs before the push steps, vulnerable images are not published
-to GHCR.
+The scan reports high and critical vulnerabilities in the workflow logs. It uses
+`exit-code: "0"` so the scan is informational and does not block the image push.
+
+Use `exit-code: "1"` when the project policy requires blocking releases that
+contain high or critical vulnerabilities.
