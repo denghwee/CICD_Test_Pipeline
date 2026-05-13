@@ -88,7 +88,7 @@ The pipeline scans the image before pushing it:
 
 ```yaml
 - name: Scan Docker image with Trivy
-  uses: aquasecurity/trivy-action@0.24.0
+  uses: aquasecurity/trivy-action@v0.36.0
   with:
     image-ref: ${{ steps.image.outputs.image_name }}:${{ github.sha }}
     format: table
