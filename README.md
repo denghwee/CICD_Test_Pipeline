@@ -109,6 +109,87 @@ Last recorded scan summary:
 The detailed vulnerability findings and mitigation strategy are documented in
 `documents/docker/Task_4_Healthcheck_Instructions.md`.
 
+## SonarQube setup and analysis
+
+Start a local SonarQube server:
+
+```powershell
+docker run -d --name sonarqube `
+  -p 9000:9000 `
+  -v sonarqube_data:/opt/sonarqube/data `
+  sonarqube:2026.1-community
+```
+
+Open SonarQube:
+
+```text
+http://localhost:9000
+```
+
+Login with:
+
+```text
+admin / admin
+```
+
+Change the admin password, then create a manual project:
+
+| Field | Value |
+| ----- | ----- |
+| Project key | `cicd-python-fastapi` |
+| Display name | `CICD Python FastAPI` |
+
+Generate a project token and store it securely. Do not commit the token.
+
+PowerShell local token setup:
+
+```powershell
+$env:SONAR_TOKEN="paste-token-here"
+```
+
+Generate coverage:
+
+```powershell
+venv\Scripts\python.exe -m pytest --cov=src --cov-report=xml:coverage.xml
+```
+
+Run local SonarQube analysis:
+
+```powershell
+docker run --rm `
+  -e SONAR_HOST_URL="http://host.docker.internal:9000" `
+  -e SONAR_TOKEN="$env:SONAR_TOKEN" `
+  -v "${PWD}:/usr/src" `
+  sonarsource/sonar-scanner-cli
+```
+
+The project analysis configuration is in:
+
+```text
+sonar-project.properties
+```
+
+The GitHub Actions workflow is in:
+
+```text
+.github/workflows/sonarqube.yml
+```
+
+Configure these GitHub repository secrets:
+
+```text
+SONAR_TOKEN
+SONAR_HOST_URL
+```
+
+SonarQube task documentation:
+
+- `documents/sonarqube/Task_1_Setup_SonarQube_Server.md`
+- `documents/sonarqube/Task_2_Project_Analysis.md`
+- `documents/sonarqube/Task_3_GitHub_Actions_SonarQube.md`
+- `documents/sonarqube/Task_4_Issue_Fixes.md`
+- `documents/sonarqube/Task_5_Quality_Gate.md`
+
 ## Submission deliverables
 
 | Requirement | Status | Location |
@@ -119,6 +200,11 @@ The detailed vulnerability findings and mitigation strategy are documented in
 | `docker-compose.yml` for development | Done | `docker-compose.yml` |
 | README with build and run instructions | Done | `README.md` |
 | Screenshots of running container and vulnerability scan results | Add before final submission | `screenshots/` |
+| SonarQube project configuration | Done | `sonar-project.properties` |
+| SonarQube GitHub Actions workflow | Done | `.github/workflows/sonarqube.yml` |
+| Documentation of fixed SonarQube issues | Done | `documents/sonarqube/Task_4_Issue_Fixes.md` |
+| SonarQube dashboard and quality gate screenshots | Add before final submission | `screenshots/` |
+| Manual SonarQube remaining checklist | Done | `documents/sonarqube/SUBMISSION_CHECKLIST.md` |
 
 ## Submission checklist
 
@@ -130,6 +216,11 @@ The detailed vulnerability findings and mitigation strategy are documented in
 | Non-root user configured | Done | Runtime targets use `USER appuser` |
 | Health check working | Done | Dockerfile and Compose both check `/health` |
 | Vulnerability scan completed | Done | Docker Scout summary documented above |
+| SonarQube server running locally | Manual step | Start with the Docker command in the SonarQube section |
+| Project analyzed successfully | Manual step | Run local scanner after creating token |
+| SonarQube workflow configured | Done | `.github/workflows/sonarqube.yml` |
+| Quality gate configured and enforced | Manual UI step plus workflow | Configure in SonarQube, enforced by GitHub Actions |
+| At least 5 code issues fixed | Done | `src/data_processing.py` and `documents/sonarqube/Task_4_Issue_Fixes.md` |
 
 ## Workflows
 
@@ -236,6 +327,9 @@ Recommended screenshots:
 - Running Docker container from `docker ps`.
 - Successful health check response from `curl http://localhost:8000/health`.
 - Docker Scout or Trivy vulnerability scan results.
+- SonarQube dashboard after setup.
+- SonarQube quality gate passing result.
+- SonarQube quality gate failing result from an intentional test.
 - Successful `CI Pipeline` workflow run.
 - Successful `Docker Image` workflow run.
 - Successful `Deploy` workflow run or pending production approval screen.

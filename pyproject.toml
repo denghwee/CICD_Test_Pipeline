@@ -38,3 +38,10 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.coverage.run]
+relative_files = true
+source = ["src"]
+
+[tool.coverage.xml]
+output = "coverage.xml"
